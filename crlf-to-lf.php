@@ -222,6 +222,9 @@ class CrlfConverter {
 		if(strlen($path) == 0 || $path == '/') return false;
 		if( !is_callable($handler) ) return false;
 		$result = true;
+		if( substr($path, 0, 2) == '.'.DIRECTORY_SEPARATOR ) {
+			$path = trim(substr($path, 2), DIRECTORY_SEPARATOR);
+		}
 		if( is_file($path) || is_link($path) ) {
 			return !!call_user_func_array($handler, [$path]);
 		}
