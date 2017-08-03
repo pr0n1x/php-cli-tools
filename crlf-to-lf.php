@@ -108,9 +108,9 @@ class CrlfConverter {
 
 		if( !empty($opts['a']) ) {
 			if( is_array($opts['a']) )
-				$fileExtAllowOptsString .= ','.implode(',', $opts['e']);
+				$fileExtAllowOptsString .= ','.implode(',', $opts['a']);
 			else
-				$fileExtAllowOptsString .= ','.$opts['e'];
+				$fileExtAllowOptsString .= ','.$opts['a'];
 		}
 		if( !empty($opts['allow-ext']) ) {
 			if( is_array($opts['allow-ext']) )
