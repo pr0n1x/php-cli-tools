@@ -212,7 +212,8 @@ class CrlfConverter {
 				.str_replace(["\r", "\n"], ["\\r", "\\n"], $convert[1])
 				.PHP_EOL;
 			$fileContent = file_get_contents(self::$curDir.'/'.$filePath);
-			$fileContent = str_replace($convert[0], $convert[1], $fileContent);
+			$fileContent = str_replace(["\r\n", $convert[0]], "\n", $fileContent);
+			$fileContent = str_replace("\n", $convert[1], $fileContent);
 			file_put_contents($filePath, $fileContent);
 		}
 	}
