@@ -20,6 +20,7 @@ class CrlfConverter {
 		'css',
 		'less',
 		'sass',
+		'scss',
 		'xml',
 		'json',
 		'log',
