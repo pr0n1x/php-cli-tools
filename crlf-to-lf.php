@@ -219,7 +219,7 @@ class CrlfConverter {
 		}
 	}
 
-	function handlePath($path, $handler) {
+	static public function handlePath($path, $handler) {
 		if(strlen($path) == 0 || $path == '/') return false;
 		if( !is_callable($handler) ) return false;
 		$result = true;
@@ -245,7 +245,7 @@ class CrlfConverter {
 		return false;
 	}
 
-	static function showUsage() {
+	static public function showUsage() {
 		$defaultExtListString = implode(',', self::$fileExtAllowDefault);
 		//global $argv;
 		$argv = self::$argv;
