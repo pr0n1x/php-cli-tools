@@ -245,7 +245,7 @@ class CrlfConverter {
 		return false;
 	}
 
-	function showUsage() {
+	static function showUsage() {
 		$defaultExtListString = implode(',', self::$fileExtAllowDefault);
 		//global $argv;
 		$argv = self::$argv;
