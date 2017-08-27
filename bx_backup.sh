@@ -1,53 +1,19 @@
-#!/bin/bash
+#!/bin/sh
 #
 # if script named "bx_backup.domain.ru.sh"
 # then config file must me named as "bx_backup.domain.ru.conf"
 # config file example:
 #
-#  documentRoot="${HOME}/www/domain.ru";
-#  backupFolder="${HOME}/backup"
-#  backupName="domain.ru"
+#  document_root="${HOME}/www/domain.ru";
+#  backup_folder="${HOME}/backup"
+#  backup_name="domain.ru"
 #
 
 self_dir=$(cd $(dirname $0); pwd;);
 self_name=`basename $0`;
 self_name=${self_name%.*};
-
+current_time=`date +%Y-%m-%d-%H%M`;
 CWD=`pwd`;
-
-if [ ! -f ${self_dir}/${self_name}.conf ]; then
-	echo "Config file ${self_name}.conf not found";
-	exit 1;
-fi
-
-source ${self_dir}/${self_name}.conf;
-
-if [ ! -d $documentRoot ]; then
-	echo "Document root not found in config file";
-	exit 1;
-fi
-if [ ! -d $backupFolder ]; then
-	echo "Backup folder not found in config file";
-	exit 1;
-fi
-backupName=`echo $backupName | sed 's/\ \	//g'`;
-if [ "x" = "x$backupName" ]; then
-	echo "Backup name does not set";
-	exit 1;
-fi
-
-
-currentTime=`date +%Y-%m-%d-%H%M`;
-backupFileName="${backupName}.bak-${currentTime}"
-backupFilePath="$backupFolder/$backupFileName"
-dbUser=`cat $documentRoot/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBLogin' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
-dbPass=`cat $documentRoot/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBPassword' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
-dbName=`cat $documentRoot/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBName' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
-dbUseUtf8=`cat $documentRoot/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep 'define(' | grep 'BX_UTF' | awk -F ',' '{print $2}' | awk -F ')' '{print $1}' | sed -e 's/[[:space:]]*//'`;
-dbDefaultCharset=cp1251
-if [ "_true_" = "_${dbUseUtf8}_" ]; then
-	dbDefaultCharset=utf8
-fi
 
 show_help() {
 	echo "Usage: [-h|-f|-p|...]"
@@ -66,8 +32,10 @@ show_help() {
 	echo "    --show-db-user     - mmm.. you know"
 	echo "    --show-db-pass     - Ah! Don't use this option in public places!"
 	echo "    --show-db-charset  - Ok. This option you can use any where."
+	echo "    --make-config      - Create config file for domain (virtual host)"
+	echo "                         This options works only if it's alone"
 }
-OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset' -n 'parse-options' -- $@`
+OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config' -n 'parse-options' -- $@`
 #echo $OPTS;
 if [ $? != 0 ] ; then show_help >&2 ; exit 1 ; fi
 eval set -- $OPTS;
@@ -89,6 +57,8 @@ tar_verbose="N";
 show_db_name="N";
 show_db_user="N";
 show_db_pass="N";
+show_db_charset="N";
+make_config="N";
 while (( $# )); do
 	#echo "Opts: $@";
 	case $1 in
@@ -110,7 +80,7 @@ while (( $# )); do
 			shift;
 		;;
 		--show-db-charset)
-			echo "Database charset: $dbDefaultCharset";
+			show_db_charset="Y";
 			shift;
 		;;
 		-z | --gzip | --zip)
@@ -147,21 +117,68 @@ while (( $# )); do
 			shift;
 		;;
 		-w | --whole)
-			echo "Whole backup not implemented yet.";
+			echo "Whole backup is not implemented yet.";
 			exit 1;
 		;;
 		-p | --pipe)
 			use_pipe="Y";
 			shift;
 		;;
+		--make-config)
+			make_config="Y";
+			shift;
+		;;
 		--)
+			if [ "xY" = "x$make_config" ]; then
+				echo $0;
+				echo `realpath $0`;
+				echo "Making config";
+				#echo "Opts: $@";
+				exit 0;
+			fi
+			
+			if [ ! -f ${self_dir}/${self_name}.conf ]; then
+				echo "Config file ${self_name}.conf not found";
+				exit 1;
+			fi
+
+			source ${self_dir}/${self_name}.conf;
+
+			if [ ! -d $document_root ]; then
+				echo "Config error: Document root not found in config file" 1>&2;
+				exit 1;
+			fi
+			if [ ! -d $backup_folder ]; then
+				echo "Config error: Backup folder not found in config file" 1>&2;
+				exit 1;
+			fi
+			backup_name=`echo $backup_name | sed 's/\ \	//g'`;
+			if [ "x" = "x$backup_name" ]; then
+				echo "Config error: Backup name does not set" 1>&2;
+				exit 1;
+			fi
+
+			backup_filename="${backup_name}.bak-${current_time}"
+			backup_filepath="$backup_folder/$backup_filename"
+			db_user=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBLogin' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
+			db_pass=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBPassword' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
+			db_name=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBName' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
+			db_use_utf8=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep 'define(' | grep 'BX_UTF' | awk -F ',' '{print $2}' | awk -F ')' '{print $1}' | sed -e 's/[[:space:]]*//'`;
+			db_default_charset=cp1251
+			if [ "_true_" = "_${db_use_utf8}_" ]; then
+				db_default_charset=utf8
+			fi
+			
+			
 			return_status=0;
 			notPipeFileAndDb="Error: You can't make backup of files and database and use pushing to pipe at the same time";
 			if [ "xY" = "x$use_pipe" ] && [ "xY" = "x$make_db" ] && [ "xY" = "x$make_files" ]; then
 				echo $notPipeFileAndDb 1>&2;
+				show_help 1>&2;
 				exit 1;
 			elif [ "xY" = "x$use_pipe" ] && [ "xY" = "x$make_db" ] && [ "xY" = "x$make_upload" ]; then
 				echo $notPipeFileAndDb 1>&2;
+				show_help 1>&2;
 				exit 1;
 			elif [ "xN" = "x$make_db" ] && [ "xN" = "x$make_files" ] && [ "xN" = "x$make_upload" ]; then
 				echo "Error: Backup type is not selected. Use options: -f|-u|-a|-d" 1>&2;
@@ -175,25 +192,33 @@ while (( $# )); do
 				#show db connection params
 				if [ "xY" = "x$show_db_name" ]; then
 					if [ "xY" = "x$use_pipe" ]; then
-						echo "Database name: $dbName" 1>&2;
+						echo "Database name: $db_name" 1>&2;
 					else
-						echo "Database name: $dbName";
+						echo "Database name: $db_name";
 					fi
 				fi
 				if [ "xY" = "x$show_db_user" ]; then
 					if [ "xY" = "x$use_pipe" ]; then
-						echo "Database user: $dbUser" 1>&2;
+						echo "Database user: $db_user" 1>&2;
 					else
-						echo "Database user: $dbUser";
+						echo "Database user: $db_user";
 					fi
 				fi
 				if [ "xY" = "x$show_db_pass" ]; then
 					if [ "xY" = "x$use_pipe" ]; then
-						echo "Database password: $dbPass" 1>&2;
+						echo "Database password: $db_pass" 1>&2;
 					else
-						echo "Database password: $dbPass";
+						echo "Database password: $db_pass";
 					fi
 				fi
+				if [ "xY" = "x$show_db_charset" ]; then
+					if [ "xY" = "x$use_pipe" ]; then
+						echo "Database charset: $db_default_charset" 1>&2;
+					else
+						echo "Database charset: $db_default_charset";
+					fi
+				fi
+				
 			
 				#make database backup
 				compression_message="";
@@ -212,22 +237,22 @@ while (( $# )); do
 					if [ "xY" = "x$use_pipe" ]; then
 						printf "Making database backup $compression_message..." 1>&2;
 						if [ "xY" = "x$use_gzip" ]; then
-							mysqldump -u$dbUser -p$dbPass $dbName --default-character-set=$dbDefaultCharset | gzip
+							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset | gzip
 						elif [ "xY" = "x$use_bzip" ]; then
-							mysqldump -u$dbUser -p$dbPass $dbName --default-character-set=$dbDefaultCharset | bzip2
+							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset | bzip2
 						else
-							mysqldump -u$dbUser -p$dbPass $dbName --default-character-set=$dbDefaultCharset
+							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset
 						fi
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making database backup $compression_message...";
 						if [ "xY" = "x$use_gzip" ]; then
-							mysqldump -u$dbUser -p$dbPass $dbName --default-character-set=$dbDefaultCharset > ${backupFilePath}.db.sql && gzip ${backupFilePath}.db.sql;
+							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && gzip ${backup_filepath}.db.sql;
 						elif [ "xY" = "x$use_bzip" ]; then
-							mysqldump -u$dbUser -p$dbPass $dbName --default-character-set=$dbDefaultCharset > ${backupFilePath}.db.sql && bzip2 ${backupFilePath}.db.sql;
+							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && bzip2 ${backup_filepath}.db.sql;
 						else
-							mysqldump -u$dbUser -p$dbPass $dbName --default-character-set=$dbDefaultCharset > ${backupFilePath}.db.sql;
+							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset > ${backup_filepath}.db.sql;
 						fi
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
@@ -235,67 +260,67 @@ while (( $# )); do
 				fi
 				
 				#make files backup
-				tarExcludes="";
-				tarExcludes="$tarExcludes --exclude=./bitrix/cache";
-				tarExcludes="$tarExcludes --exclude=./bitrix/managed_cache";
-				tarExcludes="$tarExcludes --exclude=./bitrix/stack_cache";
-				tarExcludes="$tarExcludes --exclude=./bitrix/backup";
-				tarExcludes="$tarExcludes --exclude=./bitrix/tmp";
-				tarExcludes="$tarExcludes --exclude=./local/tmp";
-				tarExcludes="$tarExcludes --exclude=./.idea";
-				tarExcludes="$tarExcludes --exclude=./.git";
-				tarExcludes="$tarExcludes --exclude=./*.tar";
-				tarExcludes="$tarExcludes --exclude=./*.gz";
-				tarExcludes="$tarExcludes --exclude=./*.bz";
-				tarExcludes="$tarExcludes --exclude=./*.bz2";
-				tarExcludes="$tarExcludes --exclude=./*.zip";
-				tarExcludes="$tarExcludes --exclude=./*.rar";
-				tarExcludes="$tarExcludes --exclude=./*.7z";
-				tarExcludes="$tarExcludes --exclude=./*.lzma";
-				tarOpts="c";
+				tar_excludes="";
+				tar_excludes="$tar_excludes --exclude=./bitrix/cache";
+				tar_excludes="$tar_excludes --exclude=./bitrix/managed_cache";
+				tar_excludes="$tar_excludes --exclude=./bitrix/stack_cache";
+				tar_excludes="$tar_excludes --exclude=./bitrix/backup";
+				tar_excludes="$tar_excludes --exclude=./bitrix/tmp";
+				tar_excludes="$tar_excludes --exclude=./local/tmp";
+				tar_excludes="$tar_excludes --exclude=./.idea";
+				tar_excludes="$tar_excludes --exclude=./.git";
+				tar_excludes="$tar_excludes --exclude=./*.tar";
+				tar_excludes="$tar_excludes --exclude=./*.gz";
+				tar_excludes="$tar_excludes --exclude=./*.bz";
+				tar_excludes="$tar_excludes --exclude=./*.bz2";
+				tar_excludes="$tar_excludes --exclude=./*.zip";
+				tar_excludes="$tar_excludes --exclude=./*.rar";
+				tar_excludes="$tar_excludes --exclude=./*.7z";
+				tar_excludes="$tar_excludes --exclude=./*.lzma";
+				tar_opts="c";
 				if [ "xY" = "x$tar_verbose" ]; then
-					tarOpts="${tarOpts}v";
+					tar_opts="${tar_opts}v";
 				fi
 				if [ "xY" = "x$use_gzip" ]; then
-					tarOpts="${tarOpts}z";
+					tar_opts="${tar_opts}z";
 				fi
 				if [ "xY" = "x$use_bzip" ]; then
-					tarOpts="${tarOpts}j";
+					tar_opts="${tar_opts}j";
 				fi
-				tarOpts="${tarOpts}f";
+				tar_opts="${tar_opts}f";
 				if [ "xY" = "x$make_files" ] && [ "xY" = "x$make_upload" ]; then
-					cd $documentRoot;
+					cd $document_root;
 					if [ "xY" = $use_pipe ]; then
 						printf "Making full files backup..." 1>&2;
-						tar $tarOpts - $tarExcludes ./;
+						tar $tar_opts - $tar_excludes ./;
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making full files backup...";
-						tar $tarOpts ${backupFilePath}.all.$tar_file_ext $tarExcludes ./;
+						tar $tar_opts ${backup_filepath}.all.$tar_file_ext $tar_excludes ./;
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
 					cd $CWD;
 				elif [ "xY" = "x$make_files" ]; then
-					cd $documentRoot;
+					cd $document_root;
 					if [ "xY" = "x$use_pipe" ]; then
 						printf "Making bitrix program files backup..." 1>&2;
-						tar $tarOpts - $tarExcludes --exclude=./upload ./;
+						tar $tar_opts - $tar_excludes --exclude=./upload ./;
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making bitrix program files backup...";
-						tar $tarOpts ${backupFilePath}.files.$tar_file_ext $tarExcludes --exclude=./upload ./;
+						tar $tar_opts ${backup_filepath}.files.$tar_file_ext $tar_excludes --exclude=./upload ./;
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
 					cd $CWD;
 				elif [ "xY" = "x$make_upload" ]; then
-					cd $documentRoot;
+					cd $document_root;
 					if [ "xY" = "x$use_pipe" ]; then
 						printf "Making bitrix upload backup..." 1>&2;
-						tar $tarOpts - $tarExcludes \
+						tar $tar_opts - $tar_excludes \
 							--exclude=./upload/resize_cache \
 							--exclude=./upload/1c_exchange \
 							--exclude=./upload/1c_catalog \
@@ -304,7 +329,7 @@ while (( $# )); do
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making bitrix upload backup...";
-						tar $tarOpts ${backupFilePath}.upload.$tar_file_ext $tarExcludes \
+						tar $tar_opts ${backup_filepath}.upload.$tar_file_ext $tar_excludes \
 							--exclude=./upload/resize_cache \
 							--exclude=./upload/1c_exchange \
 							--exclude=./upload/1c_catalog \
