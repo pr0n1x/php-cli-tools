@@ -185,12 +185,12 @@ document_root="${mk_conf_document_root}";
 backup_folder="${mk_conf_backup_folder}";
 
 EOF
-					mk_conf_editor=`which mcedit`;
+					mk_conf_editor=`which mcedit 2>/dev/null`;
 					if [ "x" = "x${mk_conf_editor}" ]; then
-						mk_conf_editor=`which nano`;
+						mk_conf_editor=`which nano 2>/dev/null`;
 					fi
 					if [ "x" = "x${mk_conf_editor}" ]; then
-						mk_conf_editor=`which vim`;
+						mk_conf_editor=`which vim 2>/dev/null`;
 					fi
 					if [ "x" != "x${mk_conf_editor}" ]; then
 						$mk_conf_editor $mk_conf_new_conf;
