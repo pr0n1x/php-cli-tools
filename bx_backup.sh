@@ -8,7 +8,7 @@
 #  document_root="${HOME}/www/domain.ru";
 #  backup_folder="${HOME}/backup"
 #
-realpath=`which realpath`;
+realpath=`which realpath 2>/dev/null`;
 if [ "x" = "x$realpath" ]; then
 	realpath="readlink -f"
 fi
