@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/bin/bash
 #
 # if script named "bx_backup.domain.ru.sh"
 # then config file must me named as "bx_backup.domain.ru.conf"
