@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -l
 #
 # if script named "bx_backup.domain.ru.sh"
 # then config file must me named as "bx_backup.domain.ru.conf"
@@ -8,11 +8,14 @@
 #  document_root="${HOME}/www/domain.ru";
 #  backup_folder="${HOME}/backup"
 #
-
+realpath=`which realpath`;
+if [ "x" = "x$realpath" ]; then
+	realpath="readlink -f"
+fi
 self_dir=$(cd $(dirname $0); pwd;);
 self_name=`basename $0`;
 self_name=${self_name%.*};
-self_real_path=`realpath $0`;
+self_real_path=`$realpath $0`;
 self_real_name=`basename $self_real_path`;
 self_real_name=${self_real_name%.*};
 current_time=`date +%Y-%m-%d-%H%M`;
@@ -156,8 +159,8 @@ while (( $# )); do
 				if [ "x" = "x$mk_conf_backup_folder" ]; then
 					mk_conf_backup_folder="\${HOME}/backup"
 				fi
-				mk_conf_new_self=${self_dir}/${self_real_name}.${mk_conf_domain}.sh;
-				mk_conf_new_conf=${self_dir}/${self_real_name}.${mk_conf_domain}.conf;
+				mk_conf_new_self=${self_dir}/${self_name}.${mk_conf_domain}.sh;
+				mk_conf_new_conf=${self_dir}/${self_name}.${mk_conf_domain}.conf;
 				#echo "mk_conf_domain=${mk_conf_domain}";
 				#echo "mk_conf_document_root=${mk_conf_document_root}";
 				#echo "mk_conf_backup_folder=${mk_conf_backup_folder}";
