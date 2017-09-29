@@ -370,12 +370,12 @@ EOF
 				elif [ "xY" = "x$make_files" ]; then
 					cd $document_root;
 					if [ "xY" = "x$use_pipe" ]; then
-						printf "Making bitrix program files backup..." 1>&2;
+						printf "Making bitrix program files backup $compression_message..." 1>&2;
 						tar $tar_opts - $tar_excludes --exclude=./upload ./;
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
-						printf "Making bitrix program files backup...";
+						printf "Making bitrix program files backup $compression_message...";
 						tar $tar_opts ${backup_filepath}.files.$tar_file_ext $tar_excludes --exclude=./upload ./;
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
@@ -384,7 +384,7 @@ EOF
 				elif [ "xY" = "x$make_upload" ]; then
 					cd $document_root;
 					if [ "xY" = "x$use_pipe" ]; then
-						printf "Making bitrix upload backup..." 1>&2;
+						printf "Making bitrix upload backup $compression_message..." 1>&2;
 						tar $tar_opts - $tar_excludes \
 							--exclude=./upload/resize_cache \
 							--exclude=./upload/1c_exchange \
@@ -393,7 +393,7 @@ EOF
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
-						printf "Making bitrix upload backup...";
+						printf "Making bitrix upload backup $compression_message...";
 						tar $tar_opts ${backup_filepath}.upload.$tar_file_ext $tar_excludes \
 							--exclude=./upload/resize_cache \
 							--exclude=./upload/1c_exchange \
