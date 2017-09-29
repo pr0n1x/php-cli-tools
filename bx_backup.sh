@@ -38,6 +38,7 @@ show_help() {
 	echo "    --show-db-user     - mmm.. you know";
 	echo "    --show-db-pass     - Ah! Don't use this option in public places!";
 	echo "    --show-db-charset  - Ok. This option you can use any where.";
+	echo "    --sleep=<seconds>  - Пауза в секундах перед стартом.";
 	show_mk_conf_help;
 }
 show_mk_conf_help() {
@@ -46,8 +47,9 @@ show_mk_conf_help() {
 	echo "                         Example:";
 	echo "                         --make-config domain.ru ~/ext_www/domain.ru ~/backup";
 }
-OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config' -n 'parse-options' -- $@`
+OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::' -n 'parse-options' -- $@`
 #echo $OPTS;
+#exit;
 if [ $? != 0 ] ; then show_help >&2 ; exit 1 ; fi
 eval set -- $OPTS;
 if [ "x--" = "x$1" ]; then
@@ -70,6 +72,7 @@ show_db_user="N";
 show_db_pass="N";
 show_db_charset="N";
 make_config="N";
+sleep_seconds="0"
 while (( $# )); do
 	#echo "Opts: $@";
 	case $1 in
@@ -139,7 +142,16 @@ while (( $# )); do
 			make_config="Y";
 			shift;
 		;;
+		--sleep)
+			if [ "x$2" != "x0" ]; then
+				sleep_seconds=`expr $2 + 0 2>/dev/null || echo "0"`;
+			fi
+			shift;
+			shift;
+		;;
 		--)
+			sleep $sleep_seconds;
+		
 			if [ "xY" = "x$make_config" ]; then
 				echo "Making config.";
 				#echo "Opts: $@";
