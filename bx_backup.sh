@@ -257,7 +257,13 @@ EOF
 				echo $notPipeFileAndDb 1>&2;
 				show_help 1>&2;
 				exit 1;
-			elif [ "xN" = "x$make_db" ] && [ "xN" = "x$make_files" ] && [ "xN" = "x$make_upload" ]; then
+			elif [ "xN" = "x$make_db" ]\
+				&& [ "xN" = "x$make_files" ]\
+				&& [ "xN" = "x$make_upload" ]\
+				&& [ "xN" = "x$show_db_name" ]\
+				&& [ "xN" = "x$show_db_user" ]\
+				&& [ "xN" = "x$show_db_pass" ]\
+			; then
 				echo "Error: Backup type is not selected. Use options: -f|-u|-a|-d" 1>&2;
 				show_help 1>&2;
 				exit 1;
