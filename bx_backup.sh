@@ -380,8 +380,8 @@ EOF
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts - $tar_excludes ./;
-						rm bitrix/.settings.php bitrix/.settings.restore.php
-						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
+						rm bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
@@ -389,8 +389,8 @@ EOF
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts ${backup_filepath}.all.$tar_file_ext $tar_excludes ./;
-						rm bitrix/.settings.php bitrix/.settings.restore.php
-						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
+						rm bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
@@ -402,8 +402,8 @@ EOF
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts - $tar_excludes --exclude=./upload ./;
-						rm bitrix/.settings.php bitrix/.settings.restore.php
-						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
+						rm bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
@@ -411,8 +411,8 @@ EOF
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts ${backup_filepath}.files.$tar_file_ext $tar_excludes --exclude=./upload ./;
-						rm bitrix/.settings.php bitrix/.settings.restore.php
-						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
+						rm bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
