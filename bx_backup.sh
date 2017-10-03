@@ -350,6 +350,8 @@ EOF
 				tar_excludes="$tar_excludes --exclude=./bitrix/backup";
 				tar_excludes="$tar_excludes --exclude=./bitrix/tmp";
 				tar_excludes="$tar_excludes --exclude=./local/tmp";
+				tar_excludes="$tar_excludes --exclude=./bitrix/php_interface/dbconn.php";
+				tar_excludes="$tar_excludes --exclude=./bitrix/.settings.php";
 				tar_excludes="$tar_excludes --exclude=./.idea";
 				tar_excludes="$tar_excludes --exclude=./.git";
 				tar_excludes="$tar_excludes --exclude=./*.tar";
@@ -375,12 +377,20 @@ EOF
 					cd $document_root;
 					if [ "xY" = $use_pipe ]; then
 						printf "Making full files backup..." 1>&2;
+						cp bitrix/.settings.php bitrix/.settings.restore.php
+						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts - $tar_excludes ./;
+						rm bitrix/.settings.php bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making full files backup...";
+						cp bitrix/.settings.php bitrix/.settings.restore.php
+						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts ${backup_filepath}.all.$tar_file_ext $tar_excludes ./;
+						rm bitrix/.settings.php bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
@@ -389,12 +399,20 @@ EOF
 					cd $document_root;
 					if [ "xY" = "x$use_pipe" ]; then
 						printf "Making bitrix program files backup $compression_message..." 1>&2;
+						cp bitrix/.settings.php bitrix/.settings.restore.php
+						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts - $tar_excludes --exclude=./upload ./;
+						rm bitrix/.settings.php bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making bitrix program files backup $compression_message...";
+						cp bitrix/.settings.php bitrix/.settings.restore.php
+						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						tar $tar_opts ${backup_filepath}.files.$tar_file_ext $tar_excludes --exclude=./upload ./;
+						rm bitrix/.settings.php bitrix/.settings.restore.php
+						rm bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
