@@ -353,8 +353,10 @@ EOF
 				tar_excludes="$tar_excludes --exclude=./local/tmp";
 				tar_excludes="$tar_excludes --exclude=./bitrix/php_interface/dbconn.php";
 				tar_excludes="$tar_excludes --exclude=./bitrix/.settings.php";
-				tar_excludes="$tar_excludes --exclude=.htaccess";
-				tar_excludes="$tar_excludes --exclude=urlrewrite.php";
+				tar_excludes="$tar_excludes --exclude=./.htaccess";
+				tar_excludes="$tar_excludes --exclude=./urlrewrite.php";
+				tar_excludes="$tar_excludes --exclude=./site.*/bitrix";
+				tar_excludes="$tar_excludes --exclude=./site.*/upload";
 				tar_excludes="$tar_excludes --exclude=./.idea";
 				tar_excludes="$tar_excludes --exclude=./.git";
 				tar_excludes="$tar_excludes --exclude=./*.tar";
