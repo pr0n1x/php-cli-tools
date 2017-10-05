@@ -263,7 +263,8 @@ EOF
 				&& [ "xN" = "x$show_db_name" ]\
 				&& [ "xN" = "x$show_db_user" ]\
 				&& [ "xN" = "x$show_db_pass" ]\
-			; then
+				&& [ "xN" = "x$show_db_charset" ];
+			then
 				echo "Error: Backup type is not selected. Use options: -f|-u|-a|-d" 1>&2;
 				show_help 1>&2;
 				exit 1;
