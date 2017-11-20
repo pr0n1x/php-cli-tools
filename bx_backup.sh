@@ -126,7 +126,7 @@ while (( $# )); do
 			shift;
 		;;
 		-a | --all)
-			make_db="Y";
+			make_upload="Y";
 			make_files="Y";
 			shift;
 		;;
