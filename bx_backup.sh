@@ -47,7 +47,7 @@ show_mk_conf_help() {
 	echo "                         Example:";
 	echo "                         --make-config domain.ru ~/ext_www/domain.ru ~/backup";
 }
-OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::' -n 'parse-options' -- $@`
+OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::,ignore-table:' -n 'parse-options' -- $@`
 #echo $OPTS;
 #exit;
 if [ $? != 0 ] ; then show_help >&2 ; exit 1 ; fi
@@ -73,6 +73,7 @@ show_db_pass="N";
 show_db_charset="N";
 make_config="N";
 sleep_seconds="0"
+db_ingore_table=""
 while (( $# )); do
 	#echo "Opts: $@";
 	case $1 in
@@ -123,6 +124,11 @@ while (( $# )); do
 		;;
 		-d | --db | --database)
 			make_db="Y";
+			shift;
+		;;
+		--ignore-table)
+			db_ingore_table="$db_ingore_table --ignore-table=#db_name#.$2"
+			shift;
 			shift;
 		;;
 		-a | --all)
@@ -318,25 +324,26 @@ EOF
 					tar_file_ext="tar";
 				fi
 				if [ "xY" = "x$make_db" ]; then
+					db_ingore_table=`echo $db_ingore_table | sed "s/#db_name#/$db_name/g"`;
 					if [ "xY" = "x$use_pipe" ]; then
 						printf "Making database backup $compression_message..." 1>&2;
 						if [ "xY" = "x$use_gzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset | gzip
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset | gzip
 						elif [ "xY" = "x$use_bzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset | bzip2
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset | bzip2
 						else
-							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset
 						fi
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making database backup $compression_message...";
 						if [ "xY" = "x$use_gzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && gzip ${backup_filepath}.db.sql;
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && gzip ${backup_filepath}.db.sql;
 						elif [ "xY" = "x$use_bzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && bzip2 ${backup_filepath}.db.sql;
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && bzip2 ${backup_filepath}.db.sql;
 						else
-							mysqldump -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset > ${backup_filepath}.db.sql;
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset > ${backup_filepath}.db.sql;
 						fi
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
