@@ -444,7 +444,6 @@ EOF
 					elif [ "xY" = "x$use_bzip" ]; then
 						compression_command=bzip2;
 					fi
-					echo $compression_command 1>&2;
 					if [ "xY" = "x$use_pipe" ]; then
 						printf "Making database backup $compression_message..." 1>&2;
 						if [ "xcat" != "x$compression_command" ]; then
