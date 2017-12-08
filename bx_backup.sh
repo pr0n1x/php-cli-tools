@@ -23,29 +23,31 @@ CWD=`pwd`;
 
 show_help() {
 	echo "Usage: ${self_name} [options]";
-	echo "    -h | --help        - Show this help message";
-	echo "    -p | --pipe        - Do not create file and push data to stdout";
-	echo "    -f | --files       - Create backup of the bitrix program files";
-	echo "    -u | --upload      - Create backup of the bitrix upload folder";
-	echo "    -a | --all-files   - Create full backup except database dump file :)";
-	echo "    -w | --whole       - Not implemented yet. Create whole files to backup with database";
-	echo "    -d | --db          - Backup database";
-	echo "    -z | --gzip        - Use gzip compression";
-	echo "    -j | --bzip        - Use bzip2 compression";
-	echo "    -v | --tar-verbose - Show tar report (tar option -v)";
-	echo "    --tar-perm         - Save files permisions (tar option -p)";
-	echo "    --show-db-name     - mmm.. this option shows database name...";
-	echo "    --show-db-user     - mmm.. you know";
-	echo "    --show-db-pass     - Ah! Don't use this option in public places!";
-	echo "    --show-db-charset  - Ok. This option you can use any where.";
-	echo "    --sleep=<seconds>  - Пауза в секундах перед стартом.";
+	echo "    -h | --help              - Show this help message";
+	echo "    -p | --pipe              - Do not create file and push data to stdout";
+	echo "    -f | --files             - Create backup of the bitrix program files";
+	echo "    -u | --upload            - Create backup of the bitrix upload folder";
+	echo "    -a | --all-files         - Create full backup except database dump file :)";
+	echo "    -w | --whole             - Not implemented yet. Create whole files to backup with database";
+	echo "    -d | --db                - Backup database";
+	echo "    --ignore-table=<db_name> - Excludes table from database dump.";
+	echo "                               Option can be repeated several times";
+	echo "    -z | --gzip              - Use gzip compression";
+	echo "    -j | --bzip              - Use bzip2 compression";
+	echo "    -v | --tar-verbose       - Show tar report (tar option -v)";
+	echo "    --tar-perm               - Save files permisions (tar option -p)";
+	echo "    --show-db-name           - mmm.. this option shows database name...";
+	echo "    --show-db-user           - mmm.. you know";
+	echo "    --show-db-pass           - Ah! Don't use this option in public places!";
+	echo "    --show-db-charset        - Ok. This option you can use any where.";
+	echo "    --sleep=<seconds>        - Пауза в секундах перед стартом.";
 	show_mk_conf_help;
 }
 show_mk_conf_help() {
-	echo "    --make-config      - Create config file for domain (virtual host) and backup script symlink";
-	echo "                         --make-config <domain-name> [document root path] [backup folder path]";
-	echo "                         Example:";
-	echo "                         --make-config domain.ru ~/ext_www/domain.ru ~/backup";
+	echo "    --make-config     - Create config file for domain (virtual host) and backup script symlink";
+	echo "                        --make-config <domain-name> [document root path] [backup folder path]";
+	echo "                        Example:";
+	echo "                        --make-config domain.ru ~/ext_www/domain.ru ~/backup";
 }
 OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::,ignore-table:' -n 'parse-options' -- $@`
 #echo $OPTS;
