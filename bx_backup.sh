@@ -23,24 +23,29 @@ CWD=`pwd`;
 
 show_help() {
 	echo "Usage: ${self_name} [options]";
-	echo "    -h | --help              - Show this help message";
-	echo "    -p | --pipe              - Do not create file and push data to stdout";
-	echo "    -f | --files             - Create backup of the bitrix program files";
-	echo "    -u | --upload            - Create backup of the bitrix upload folder";
-	echo "    -a | --all-files         - Create full backup except database dump file :)";
-	echo "    -w | --whole             - Not implemented yet. Create whole files to backup with database";
-	echo "    -d | --db                - Backup database";
-	echo "    --ignore-table=<db_name> - Excludes table from database dump.";
-	echo "                               Option can be repeated several times";
-	echo "    -z | --gzip              - Use gzip compression";
-	echo "    -j | --bzip              - Use bzip2 compression";
-	echo "    -v | --tar-verbose       - Show tar report (tar option -v)";
-	echo "    --tar-perm               - Save files permisions (tar option -p)";
-	echo "    --show-db-name           - mmm.. this option shows database name...";
-	echo "    --show-db-user           - mmm.. you know";
-	echo "    --show-db-pass           - Ah! Don't use this option in public places!";
-	echo "    --show-db-charset        - Ok. This option you can use any where.";
-	echo "    --sleep=<seconds>        - Пауза в секундах перед стартом.";
+	echo "    -h | --help               - Show this help message";
+	echo "    -p | --pipe               - Do not create file and push data to stdout";
+	echo "    -f | --files              - Create backup of the bitrix program files";
+	echo "    -u | --upload             - Create backup of the bitrix upload folder";
+	echo "    -a | --all-files          - Create full backup except database dump file :)";
+	echo "    -w | --whole              - Not implemented yet. Create whole files to backup with database";
+	echo "    -d | --db                 - Backup database";
+	echo "    --skip-table=<db_name>    - Excludes table data from the datavase dump.";
+	echo "    --ignore-table=<db_name>  - Excludes table data and structure from the database dump.";
+	echo "                                 Options --skip-table and --ignore-table can be used several times";
+	echo "    --skip-bx-stat            - Exclude data of \"statistics\" module from database dump";
+	echo "    --skip-bx-search-index    - Exclude search index data from database dump";
+	echo "    --skip-bx-event-log       - Exclude event log data from database dump";
+	echo "    --skip-bx-huge            - alias of: --skip-bx-stat --skip-bx-search-index --skip-bx-event-log";
+	echo "    -z | --gzip               - Use gzip compression";
+	echo "    -j | --bzip               - Use bzip2 compression";
+	echo "    -v | --tar-verbose        - Show tar report (tar option -v)";
+	echo "    --tar-perm                - Save files permisions (tar option -p)";
+	echo "    --show-db-name            - mmm.. this option shows database name...";
+	echo "    --show-db-user            - mmm.. you know";
+	echo "    --show-db-pass            - Ah! Don't use this option in public places!";
+	echo "    --show-db-charset         - Ok. This option you can use any where.";
+	echo "    --sleep=<seconds>         - Пауза в секундах перед стартом.";
 	show_mk_conf_help;
 }
 show_mk_conf_help() {
@@ -49,7 +54,7 @@ show_mk_conf_help() {
 	echo "                        Example:";
 	echo "                        --make-config domain.ru ~/ext_www/domain.ru ~/backup";
 }
-OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::,ignore-table:' -n 'parse-options' -- $@`
+OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::,ignore-table:,skip-table:,skip-bx-stat,skip-bx-search-index,skip-bx-event-log,skip-bx-huge' -n 'parse-options' -- $@`
 #echo $OPTS;
 #exit;
 if [ $? != 0 ] ; then show_help >&2 ; exit 1 ; fi
@@ -74,8 +79,14 @@ show_db_user="N";
 show_db_pass="N";
 show_db_charset="N";
 make_config="N";
-sleep_seconds="0"
-db_ingore_table=""
+sleep_seconds="0";
+db_ingore_table="";
+db_no_data_table="";
+db_skip_bx_stat="N";
+db_skip_bx_search_index="N";
+db_skip_bx_event_log="N";
+db_skip_bx_huge="N"
+
 while (( $# )); do
 	#echo "Opts: $@";
 	case $1 in
@@ -131,6 +142,30 @@ while (( $# )); do
 		--ignore-table)
 			db_ingore_table="$db_ingore_table --ignore-table=#db_name#.$2"
 			shift;
+			shift;
+		;;
+		--skip-table)
+			db_ingore_table="$db_ingore_table --ignore-table=#db_name#.$2"
+			db_no_data_table="$db_no_data_table $2"
+			shift;
+			shift;
+		;;
+		--skip-bx-stat)
+			db_skip_bx_stat="Y";
+			shift;
+		;;
+		--skip-bx-search-index)
+			db_skip_bx_search_index="Y";
+			shift;
+		;;
+		--skip-bx-event-log)
+			db_skip_bx_event_log="Y";
+			shift;
+		;;
+		--skip-bx-huge)
+			db_skip_bx_stat="Y";
+			db_skip_bx_search_index="Y";
+			db_skip_bx_event_log="Y";
 			shift;
 		;;
 		-a | --all)
@@ -326,27 +361,105 @@ EOF
 					tar_file_ext="tar";
 				fi
 				if [ "xY" = "x$make_db" ]; then
+				
+					function get_all_bx_tables {
+						echo 'SHOW TABLES;' \
+						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| grep -v 'Tables_in_';
+					}
+					function get_bx_stat_tables {
+						echo "SHOW TABLES like 'b_stat_%';" \
+						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| grep -v 'Tables_in_';
+					}
+					function get_bx_event_log_tables {
+						echo "SHOW TABLES like 'b_event_log';" \
+						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| grep -v 'Tables_in_';
+					}
+					function get_bx_search_index_tables {
+						local sql="
+						SHOW TABLES
+						FROM $db_name
+						WHERE
+							Tables_in_$db_name like 'b_search_%'
+							AND Tables_in_$db_name <> 'b_search_custom_rank'
+							AND Tables_in_$db_name <> 'b_search_phrase'
+						";
+						echo $sql \
+						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| grep -v 'Tables_in_';
+					}
+					function get_huge_tables {
+						local sql="
+						SHOW TABLES
+						FROM $db_name
+						WHERE
+							( Tables_in_$db_name like 'b_stat_%'
+								or Tables_in_$db_name like 'b_search_%'
+								or Tables_in_$db_name = 'b_event_log'
+							)
+							AND Tables_in_$db_name <> 'b_search_custom_rank'
+							AND Tables_in_$db_name <> 'b_search_phrase'
+						";
+						echo $sql \
+						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| grep -v 'Tables_in_';
+					}
+					
+					skip_tables_list='';
+					if [ "xY" = "x$db_skip_bx_huge" ]; then
+						skip_tables_list="$skip_tables_list $(get_huge_tables)";
+					else
+						if [ "xY" = "x$db_skip_bx_event_log" ]; then
+							skip_tables_list="$skip_tables_list $(get_bx_event_log_tables)";
+						fi
+						if [ "xY" = "x$db_skip_bx_stat" ]; then
+							skip_tables_list="$skip_tables_list $(get_bx_stat_tables)";
+						fi
+						if [ "xY" = "x$db_skip_bx_search_index" ]; then
+							skip_tables_list="$skip_tables_list $(get_bx_search_index_tables)";
+						fi
+					fi
+					
+					for skip_table in $skip_tables_list; do
+						db_ingore_table="$db_ingore_table --ignore-table=#db_name#.$skip_table";
+						db_no_data_table="$db_no_data_table $skip_table";
+					done;
+				
 					db_ingore_table=`echo $db_ingore_table | sed "s/#db_name#/$db_name/g"`;
-					if [ "xY" = "x$use_pipe" ]; then
-						printf "Making database backup $compression_message..." 1>&2;
-						if [ "xY" = "x$use_gzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset | gzip
-						elif [ "xY" = "x$use_bzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset | bzip2
+
+					function make_mysql_dump {
+						if [ "x" != "x$db_no_data_table" ]; then
+							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset \
+							&& mysqldump -u$db_user -p$db_pass $db_name $db_no_data_table --default-character-set=$db_default_charset
 						else
 							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset
+						fi
+					}
+					
+					compression_command=cat;
+					if [ "xY" = "x$use_gzip" ]; then
+						compression_command=gzip;
+					elif [ "xY" = "x$use_bzip" ]; then
+						compression_command=bzip2;
+					fi
+					echo $compression_command 1>&2;
+					if [ "xY" = "x$use_pipe" ]; then
+						printf "Making database backup $compression_message..." 1>&2;
+						if [ "xcat" != "x$compression_command" ]; then
+							make_mysql_dump | $compression_command
+						else
+							make_mysql_dump
 						fi
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making database backup $compression_message...";
-						if [ "xY" = "x$use_gzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && gzip ${backup_filepath}.db.sql;
-						elif [ "xY" = "x$use_bzip" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset > ${backup_filepath}.db.sql && bzip2 ${backup_filepath}.db.sql;
-						else
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset > ${backup_filepath}.db.sql;
-						fi
+						make_mysql_dump > ${backup_filepath}.db.sql
+						if [ "x0" = "x$?" ] && [ "xcat" != "x$compression_command" ]; then
+							$compression_command ${backup_filepath}.db.sql;
+						fi						
 						return_status=$?;
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
