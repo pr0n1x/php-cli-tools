@@ -428,6 +428,7 @@ EOF
 					done;
 				
 					db_ingore_table=`echo $db_ingore_table | sed "s/#db_name#/$db_name/g"`;
+					db_no_data_table="--no-data $db_no_data_table";
 
 					function make_mysql_dump {
 						if [ "x" != "x$db_no_data_table" ]; then
