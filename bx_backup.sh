@@ -427,8 +427,14 @@ EOF
 						db_no_data_table="$db_no_data_table $skip_table";
 					done;
 				
-					db_ingore_table=`echo $db_ingore_table | sed "s/#db_name#/$db_name/g"`;
-					db_no_data_table="--no-data $db_no_data_table";
+					if [ "x" != "x$db_ingore_table" ]; then
+						db_ingore_table=`echo $db_ingore_table | sed "s/#db_name#/$db_name/g"`;
+					fi
+					if [ "x" != "x$db_no_data_table" ]; then
+						db_no_data_table="--no-data $db_no_data_table";
+					fi
+					#echo "@db_ingore_table: |"$db_ingore_table"|" 1>&2 ;
+					#echo "@db_no_data_table: |"$db_no_data_table"|" 1>&2;
 
 					function make_mysql_dump {
 						if [ "x" != "x$db_no_data_table" ]; then
