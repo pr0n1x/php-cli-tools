@@ -437,6 +437,15 @@ EOF
 					#echo "@db_no_data_table: |"$db_no_data_table"|" 1>&2;
 
 					function make_mysql_dump {
+						# Пригодится что бы подавить сообщение "mysql: [Warning] Using a password on the command line interface can be insecure."
+						# В данном случае проблемы безопасности нет, поскольку в bash_history не может остаться следов пароля.
+						#
+						# Соответственно нужен способ обработаться stderr отдельно от stdout (см. ниже)
+						#
+						# пример фильтрует и stdout и stderr
+						# (echo "err" >&2; echo "out";) 2> >(sed 's/e/#E/') | sed 's/o/#O/' 2>~/tmp/err 1>~/tmp/out && cat ~/tmp/out ~/tmp/err
+						# пример фильтрует только stderr
+						# (echo "err" >&2; echo "out";) 2> >(sed 's/e/#E/') | cat 2>~/tmp/err 1>~/tmp/out && cat ~/tmp/out ~/tmp/err
 						if [ "x" != "x$db_no_data_table" ]; then
 							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset \
 							&& mysqldump -u$db_user -p$db_pass $db_name $db_no_data_table --default-character-set=$db_default_charset
