@@ -40,7 +40,7 @@ show_help() {
 	echo "    -z | --gzip               - Use gzip compression";
 	echo "    -j | --bzip               - Use bzip2 compression";
 	echo "    -v | --tar-verbose        - Show tar report (tar option -v)";
-	echo "    --tar-perm                - Save files permisions (tar option -p)";
+	echo "    --tar-perm                - Save files permissions (tar option -p)";
 	echo "    --show-db-name            - mmm.. this option shows database name...";
 	echo "    --show-db-user            - mmm.. you know";
 	echo "    --show-db-pass            - Ah! Don't use this option in public places!";
