@@ -380,11 +380,11 @@ EOF
 					function get_bx_search_index_tables {
 						local sql="
 						SHOW TABLES
-						FROM $db_name
+						FROM \`${db_name}\`
 						WHERE
-							Tables_in_$db_name like 'b_search_%'
-							AND Tables_in_$db_name <> 'b_search_custom_rank'
-							AND Tables_in_$db_name <> 'b_search_phrase'
+							\`Tables_in_${db_name}\` like 'b_search_%'
+							AND \`Tables_in_${db_name}\` <> 'b_search_custom_rank'
+							AND \`Tables_in_${db_name}\` <> 'b_search_phrase'
 						";
 						echo $sql \
 						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
@@ -393,14 +393,14 @@ EOF
 					function get_huge_tables {
 						local sql="
 						SHOW TABLES
-						FROM $db_name
+						FROM \`${db_name}\`
 						WHERE
-							( Tables_in_$db_name like 'b_stat_%'
-								or Tables_in_$db_name like 'b_search_%'
-								or Tables_in_$db_name = 'b_event_log'
+							( \`Tables_in_${db_name}\` like 'b_stat_%'
+								or \`Tables_in_${db_name}\` like 'b_search_%'
+								or \`Tables_in_${db_name}\` = 'b_event_log'
 							)
-							AND Tables_in_$db_name <> 'b_search_custom_rank'
-							AND Tables_in_$db_name <> 'b_search_phrase'
+							AND \`Tables_in_${db_name}\` <> 'b_search_custom_rank'
+							AND \`Tables_in_${db_name}\` <> 'b_search_phrase'
 						";
 						echo $sql \
 						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
