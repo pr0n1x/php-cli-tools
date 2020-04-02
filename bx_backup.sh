@@ -30,7 +30,7 @@ show_help() {
 	echo "    -a | --all-files          - Create full backup except database dump file :)";
 	echo "    -w | --whole              - Not implemented yet. Create whole files to backup with database";
 	echo "    -d | --db                 - Backup database";
-	echo "    --skip-table=<db_name>    - Excludes table data from the datavase dump.";
+	echo "    --skip-table=<db_name>    - Excludes table data from the database dump.";
 	echo "    --ignore-table=<db_name>  - Excludes table data and structure from the database dump.";
 	echo "                                 Options --skip-table and --ignore-table can be used several times";
 	echo "    --skip-bx-stat            - Exclude data of \"statistics\" module from database dump";
@@ -280,6 +280,7 @@ EOF
 			# read bitrix config
 			backup_filename="${backup_name}.bak-${current_time}"
 			backup_filepath="$backup_folder/$backup_filename"
+			db_host=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBHost' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
 			db_user=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBLogin' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
 			db_pass=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBPassword' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
 			db_name=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBName' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
@@ -288,6 +289,7 @@ EOF
 			if [ "_true_" = "_${db_use_utf8}_" ]; then
 				db_default_charset=utf8
 			fi
+			
 			
 			# check errors
 			return_status=0;
@@ -361,20 +363,61 @@ EOF
 					tar_file_ext="tar";
 				fi
 				if [ "xY" = "x$make_db" ]; then
-				
+					
+					mysql_pass_cnf="[mysqldump]
+host = ${db_host:-localhost}
+port = ${db_port:-3306}
+user = \"${db_user}\"
+password = \"${db_pass}\"
+
+[mysql]
+host = ${db_host:-localhost}
+port = ${db_port:-3306}
+user = \"${db_user}\"
+password = \"${db_pass}\"
+"
+					mysql_pass_cnf_dir="/tmp/bx_backup"
+					if ! mkdir -p ${mysql_pass_cnf_dir} \
+						|| ! test -w ${mysql_pass_cnf_dir};
+					then
+						echo "Using backup folder for mysql pass config";
+						mysql_pass_cnf_dir=$backup_folder
+					fi
+					mysql_pass_cnf_filename="${backup_name}.pass.mysql.cnf"
+					mysql_pass_cnf_file="${mysql_pass_cnf_dir}/${mysql_pass_cnf_filename}"
+					
+					echo "${mysql_pass_cnf}" > ${mysql_pass_cnf_file}
+					
+					if [ "$?" != "0" ]; then
+						echo "Using backup folder for mysql pass config";
+						mysql_pass_cnf_dir=$backup_folder
+					fi
+					
+					#echo ${mysql_pass_cnf_file}
+					#cat ${mysql_pass_cnf_file}
+					
 					function get_all_bx_tables {
 						echo 'SHOW TABLES;' \
-						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| mysql \
+							--defaults-extra-file=$mysql_pass_cnf_file \
+							--default-character-set=$db_default_charset \
+							$db_name \
 						| grep -v 'Tables_in_';
 					}
 					function get_bx_stat_tables {
 						echo "SHOW TABLES like 'b_stat_%';" \
-						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| mysql \
+							--defaults-extra-file=$mysql_pass_cnf_file \
+							--default-character-set=$db_default_charset \
+							$db_name \
 						| grep -v 'Tables_in_';
 					}
 					function get_bx_event_log_tables {
 						echo "SHOW TABLES like 'b_event_log';" \
-						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| mysql \
+							--defaults-extra-file=$mysql_pass_cnf_file \
+							--default-character-set=$db_default_charset \
+							$db_name \
 						| grep -v 'Tables_in_';
 					}
 					function get_bx_search_index_tables {
@@ -387,7 +430,10 @@ EOF
 							AND \`Tables_in_${db_name}\` <> 'b_search_phrase'
 						";
 						echo $sql \
-						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| mysql \
+							--defaults-extra-file=$mysql_pass_cnf_file \
+							--default-character-set=$db_default_charset \
+							$db_name \
 						| grep -v 'Tables_in_';
 					}
 					function get_huge_tables {
@@ -403,22 +449,29 @@ EOF
 							AND \`Tables_in_${db_name}\` <> 'b_search_phrase'
 						";
 						echo $sql \
-						| mysql -u$db_user -p$db_pass $db_name --default-character-set=$db_default_charset \
+						| mysql \
+							--defaults-extra-file=$mysql_pass_cnf_file \
+							--default-character-set=$db_default_charset \
+							$db_name \
 						| grep -v 'Tables_in_';
 					}
 					
 					skip_tables_list='';
 					if [ "xY" = "x$db_skip_bx_huge" ]; then
 						skip_tables_list="$skip_tables_list $(get_huge_tables)";
+						returned=$?
 					else
 						if [ "xY" = "x$db_skip_bx_event_log" ]; then
 							skip_tables_list="$skip_tables_list $(get_bx_event_log_tables)";
+							returned=$?
 						fi
 						if [ "xY" = "x$db_skip_bx_stat" ]; then
 							skip_tables_list="$skip_tables_list $(get_bx_stat_tables)";
+							returned=$?
 						fi
 						if [ "xY" = "x$db_skip_bx_search_index" ]; then
 							skip_tables_list="$skip_tables_list $(get_bx_search_index_tables)";
+							returned=$?
 						fi
 					fi
 					
@@ -437,21 +490,24 @@ EOF
 					#echo "@db_no_data_table: |"$db_no_data_table"|" 1>&2;
 
 					function make_mysql_dump {
-						# Пригодится что бы подавить сообщение "mysql: [Warning] Using a password on the command line interface can be insecure."
-						# В данном случае проблемы безопасности нет, поскольку в bash_history не может остаться следов пароля.
-						#
-						# Соответственно нужен способ обработаться stderr отдельно от stdout (см. ниже)
-						#
-						# пример фильтрует и stdout и stderr
-						# (echo "err" >&2; echo "out";) 2> >(sed 's/e/#E/') | sed 's/o/#O/' 2>~/tmp/err 1>~/tmp/out && cat ~/tmp/out ~/tmp/err
-						# пример фильтрует только stderr
-						# (echo "err" >&2; echo "out";) 2> >(sed 's/e/#E/') | cat 2>~/tmp/err 1>~/tmp/out && cat ~/tmp/out ~/tmp/err
 						if [ "x" != "x$db_no_data_table" ]; then
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset \
-							&& mysqldump -u$db_user -p$db_pass $db_name $db_no_data_table --default-character-set=$db_default_charset
+							mysqldump \
+								--defaults-extra-file=$mysql_pass_cnf_file \
+								--default-character-set=$db_default_charset \
+								$db_name $db_ingore_table \
+							&& mysqldump \
+								--defaults-extra-file=$mysql_pass_cnf_file \
+								--default-character-set=$db_default_charset \
+								$db_name $db_no_data_table;
+							retval=$?
 						else
-							mysqldump -u$db_user -p$db_pass $db_name $db_ingore_table --default-character-set=$db_default_charset
+							mysqldump \
+								--defaults-extra-file=$mysql_pass_cnf_file \
+								--default-character-set=$db_default_charset \
+								$db_name $db_ingore_table;
+							retval=$?
 						fi
+						return $retval
 					}
 					
 					compression_command=cat;
@@ -468,16 +524,20 @@ EOF
 							make_mysql_dump
 						fi
 						return_status=$?;
-						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
+						[ "x0" = "x$return_status" ] && echo "OK" 1>&2 || echo "ERROR" 1>&2;
 					else
 						printf "Making database backup $compression_message...";
 						make_mysql_dump > ${backup_filepath}.db.sql
-						if [ "x0" = "x$?" ] && [ "xcat" != "x$compression_command" ]; then
-							$compression_command ${backup_filepath}.db.sql;
-						fi						
 						return_status=$?;
-						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
+						[ "x0" = "x$return_status" ] \
+							&& [ "xcat" != "x$compression_command" ] \
+							&& $compression_command ${backup_filepath}.db.sql;
+						[ "x0" = "x$return_status" ] \
+							&& echo "OK" || echo "ERROR"
 					fi
+					
+					rm ${mysql_pass_cnf_file}
+					
 				fi
 				
 				#make files backup
@@ -494,7 +554,9 @@ EOF
 				tar_excludes="$tar_excludes --exclude=./urlrewrite.php";
 				tar_excludes="$tar_excludes --exclude=./site.*/bitrix";
 				tar_excludes="$tar_excludes --exclude=./site.*/upload";
+				tar_excludes="$tar_excludes --exclude=./site.*/local";
 				tar_excludes="$tar_excludes --exclude=./.idea";
+				tar_excludes="$tar_excludes --exclude=./.vscode";
 				tar_excludes="$tar_excludes --exclude=./.git";
 				tar_excludes="$tar_excludes --exclude=./*.tar";
 				tar_excludes="$tar_excludes --exclude=./*.gz";
