@@ -546,8 +546,11 @@ password = \"${db_pass}\"
 				tar_excludes="$tar_excludes --exclude=./bitrix/managed_cache";
 				tar_excludes="$tar_excludes --exclude=./bitrix/stack_cache";
 				tar_excludes="$tar_excludes --exclude=./bitrix/backup";
+				tar_excludes="$tar_excludes --exclude=./bitrix/updates";
 				tar_excludes="$tar_excludes --exclude=./bitrix/tmp";
 				tar_excludes="$tar_excludes --exclude=./local/tmp";
+				tar_excludes="$tar_excludes --exclude=./bitrix/log";
+				tar_excludes="$tar_excludes --exclude=./local/log";
 				tar_excludes="$tar_excludes --exclude=./bitrix/php_interface/dbconn.php";
 				tar_excludes="$tar_excludes --exclude=./bitrix/.settings.php";
 				tar_excludes="$tar_excludes --exclude=./.htaccess";
@@ -555,6 +558,9 @@ password = \"${db_pass}\"
 				tar_excludes="$tar_excludes --exclude=./site.*/bitrix";
 				tar_excludes="$tar_excludes --exclude=./site.*/upload";
 				tar_excludes="$tar_excludes --exclude=./site.*/local";
+				tar_excludes="$tar_excludes --exclude=./www.*/bitrix";
+				tar_excludes="$tar_excludes --exclude=./www.*/upload";
+				tar_excludes="$tar_excludes --exclude=./www.*/local";
 				tar_excludes="$tar_excludes --exclude=./.idea";
 				tar_excludes="$tar_excludes --exclude=./.vscode";
 				tar_excludes="$tar_excludes --exclude=./.git";
