@@ -545,6 +545,7 @@ password = \"${db_pass}\"
 				tar_excludes="$tar_excludes --exclude=./bitrix/cache";
 				tar_excludes="$tar_excludes --exclude=./bitrix/managed_cache";
 				tar_excludes="$tar_excludes --exclude=./bitrix/stack_cache";
+				tar_excludes="$tar_excludes --exclude=./bitrix/html_pages";
 				tar_excludes="$tar_excludes --exclude=./bitrix/backup";
 				tar_excludes="$tar_excludes --exclude=./bitrix/updates";
 				tar_excludes="$tar_excludes --exclude=./bitrix/tmp";
