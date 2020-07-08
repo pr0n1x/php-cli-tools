@@ -590,7 +590,7 @@ password = \"${db_pass}\"
 						printf "Making full files backup..." 1>&2;
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
-						[ -f cp .htaccess ] && cp .htaccess .htaccess.restore
+						[ -f .htaccess ] && cp .htaccess .htaccess.restore
 						cp urlrewrite.php urlrewrite.restore.php
 						tar $tar_opts - $tar_excludes ./;
 						return_status=$?;
@@ -603,7 +603,7 @@ password = \"${db_pass}\"
 						printf "Making full files backup...";
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
-						[ -f cp .htaccess ] && cp .htaccess .htaccess.restore
+						[ -f .htaccess ] && cp .htaccess .htaccess.restore
 						cp urlrewrite.php urlrewrite.restore.php
 						tar $tar_opts ${backup_filepath}.all.$tar_file_ext $tar_excludes ./;
 						return_status=$?;
@@ -620,26 +620,26 @@ password = \"${db_pass}\"
 						printf "Making bitrix program files backup $compression_message..." 1>&2;
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
-						cp .htaccess .htaccess.restore
+						[ -f .htaccess ] && cp .htaccess .htaccess.restore
 						cp urlrewrite.php urlrewrite.restore.php
 						tar $tar_opts - $tar_excludes --exclude=./upload ./;
 						return_status=$?;
 						rm bitrix/.settings.restore.php
 						rm bitrix/php_interface/dbconn.restore.php
-						rm .htaccess.restore
+						[ -f .htaccess.restore ] && rm .htaccess.restore
 						rm urlrewrite.restore.php
 						if [ "x0" = "x$return_status" ]; then echo "OK" 1>&2; fi
 					else
 						printf "Making bitrix program files backup $compression_message...";
 						cp bitrix/.settings.php bitrix/.settings.restore.php
 						cp bitrix/php_interface/dbconn.php bitrix/php_interface/dbconn.restore.php
-						cp .htaccess .htaccess.restore
+						[ -f .htaccess ] && cp .htaccess .htaccess.restore
 						cp urlrewrite.php urlrewrite.restore.php
 						tar $tar_opts ${backup_filepath}.files.$tar_file_ext $tar_excludes --exclude=./upload ./;
 						return_status=$?;
 						rm bitrix/.settings.restore.php
 						rm bitrix/php_interface/dbconn.restore.php
-						rm .htaccess.restore
+						[ -f .htaccess.restore ] && rm .htaccess.restore
 						rm urlrewrite.restore.php
 						if [ "x0" = "x$return_status" ]; then echo "OK"; fi
 					fi
