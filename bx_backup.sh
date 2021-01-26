@@ -278,12 +278,16 @@ EOF
 			fi
 
 			# read bitrix config
+			if [ ! -f $document_root/bitrix/php_interface/dbconn.php ]; then
+				echo "Error: dbconn.php file not found ($document_root/bitrix/php_interface/dbconn.php)" 1>&2;
+				exit 1;
+			fi
 			backup_filename="${backup_name}.bak-${current_time}"
 			backup_filepath="$backup_folder/$backup_filename"
-			db_host=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBHost' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
-			db_user=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBLogin' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
-			db_pass=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBPassword' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
-			db_name=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBName' | awk -F '=' '{print $2}' | awk -F '"' '{print $2}'`;
+			db_host=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBHost' | awk -F '=' '{print $2}' | awk -F "[\"']" '{print $2}'`;
+			db_user=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBLogin' | awk -F '=' '{print $2}' | awk -F "[\"']" '{print $2}'`;
+			db_pass=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBPassword' | awk -F '=' '{print $2}' | awk -F "[\"']" '{print $2}'`;
+			db_name=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep '\$DB' | grep '\$DBName' | awk -F '=' '{print $2}' | awk -F "[\"']" '{print $2}'`;
 			db_use_utf8=`cat $document_root/bitrix/php_interface/dbconn.php | egrep -v '^[[:space:]]*(//|#)' | grep 'define(' | grep 'BX_UTF' | awk -F ',' '{print $2}' | awk -F ')' '{print $1}' | sed -e 's/[[:space:]]*//'`;
 			db_default_charset=cp1251
 			if [ "_true_" = "_${db_use_utf8}_" ]; then
