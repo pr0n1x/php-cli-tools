@@ -208,10 +208,9 @@ sleep $sleep_seconds;
 if [ "xY" = "x$make_config" ]; then
 	echo "Making config.";
 	#echo "Opts: $@";
-	mk_conf_domain=`echo $2 | sed 's/[[:space:]]//g'`
-	mk_conf_domain=`echo $2 | sed 's/[[:space:]]//g'`
-	mk_conf_document_root=`echo $3 | sed 's/[[:space:]]//g' | sed "s#${HOME}#\\\${HOME\}#g"`;
-	mk_conf_backup_folder=`echo $4 | sed 's/[[:space:]]//g' | sed "s#${HOME}#\\\${HOME\}#g"`;
+	mk_conf_domain=`echo $1 | sed 's/[[:space:]]//g'`
+	mk_conf_document_root=`echo $2 | sed 's/[[:space:]]//g' | sed "s#${HOME}#\\\$\{HOME\}#g"`;
+	mk_conf_backup_folder=`echo $3 | sed 's/[[:space:]]//g' | sed "s#${HOME}#\\\$\{HOME\}#g"`;
 	if [ "x" = "x$mk_conf_domain" ]; then
 		echo "Error: You should to set domain name" 1>&2;
 		show_mk_conf_help 1>&2;
@@ -226,11 +225,12 @@ if [ "xY" = "x$make_config" ]; then
 	fi
 	mk_conf_new_self=${self_dir}/${self_name}.${mk_conf_domain}.sh;
 	mk_conf_new_conf=${self_dir}/${self_name}.${mk_conf_domain}.conf;
-	#echo "mk_conf_domain=${mk_conf_domain}";
-	#echo "mk_conf_document_root=${mk_conf_document_root}";
-	#echo "mk_conf_backup_folder=${mk_conf_backup_folder}";
-	#echo "mk_conf_new_self=${mk_conf_new_self}";
-	#echo "mk_conf_new_conf=${mk_conf_new_conf}";
+	# echo "mk_conf_domain=${mk_conf_domain}";
+	# echo "mk_conf_document_root=${mk_conf_document_root}";
+	# echo "mk_conf_backup_folder=${mk_conf_backup_folder}";
+	# echo "mk_conf_new_self=${mk_conf_new_self}";
+	# echo "mk_conf_new_conf=${mk_conf_new_conf}";
+	# exit;
 	
 	if [ -f ${mk_conf_new_self} ]; then
 		echo "Warning: new domain backup script symlink already exists." 1>&2;
