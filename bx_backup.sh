@@ -509,16 +509,19 @@ password = \"${db_pass}\"
 				mysqldump \
 					--defaults-extra-file=$mysql_pass_cnf_file \
 					--default-character-set=$db_default_charset \
+					--single-transaction \
 					$db_name $db_ingore_table \
 				&& mysqldump \
 					--defaults-extra-file=$mysql_pass_cnf_file \
 					--default-character-set=$db_default_charset \
+					--single-transaction \
 					$db_name $db_no_data_table;
 				retval=$?
 			else
 				mysqldump \
 					--defaults-extra-file=$mysql_pass_cnf_file \
 					--default-character-set=$db_default_charset \
+					--single-transaction \
 					$db_name $db_ingore_table;
 				retval=$?
 			fi
