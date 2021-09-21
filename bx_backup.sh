@@ -33,6 +33,7 @@ show_help() {
 	echo "    --skip-table=<db_name>    - Excludes table data from the database dump.";
 	echo "    --ignore-table=<db_name>  - Excludes table data and structure from the database dump.";
 	echo "                                 Options --skip-table and --ignore-table can be used several times";
+	echo "    --lock-db                 - Lock database for guaranty of backup consistency";
 	echo "    --skip-bx-stat            - Exclude data of \"statistics\" module from database dump";
 	echo "    --skip-bx-search-index    - Exclude search index data from database dump";
 	echo "    --skip-bx-event-log       - Exclude event log data from database dump";
@@ -54,7 +55,7 @@ show_mk_conf_help() {
 	echo "                        Example:";
 	echo "                        --make-config domain.ru ~/ext_www/domain.ru ~/backup";
 }
-OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::,ignore-table:,skip-table:,skip-bx-stat,skip-bx-search-index,skip-bx-event-log,skip-bx-huge' -n 'parse-options' -- $@`
+OPTS=`getopt -o hpfuadwzjv --long 'help,pipe,files,upload,all,db,whole,gzip,zip,bzip2,bzip,tar-verbose,tar-perm,show-db-name,show-db-user,show-db-pass,show-db-charset,make-config,sleep::,ignore-table:,lock-db,skip-table:,skip-bx-stat,skip-bx-search-index,skip-bx-event-log,skip-bx-huge' -n 'parse-options' -- $@`
 #echo "eval set -- $OPTS";
 #exit;
 if [ $? != 0 ] ; then show_help >&2 ; exit 1 ; fi
@@ -83,6 +84,7 @@ make_config="N";
 sleep_seconds="0";
 db_ingore_table="";
 db_no_data_table="";
+db_lock="N";
 db_skip_bx_stat="N";
 db_skip_bx_search_index="N";
 db_skip_bx_event_log="N";
@@ -149,6 +151,10 @@ while (( $# )); do
 			db_ingore_table="$db_ingore_table --ignore-table=#db_name#.$2"
 			db_no_data_table="$db_no_data_table $2"
 			shift;
+			shift;
+		;;
+		--lock-db)
+			db_lock="Y";
 			shift;
 		;;
 		--skip-bx-stat)
@@ -503,25 +509,30 @@ password = \"${db_pass}\"
 		fi
 		#echo "@db_ingore_table: |"$db_ingore_table"|" 1>&2 ;
 		#echo "@db_no_data_table: |"$db_no_data_table"|" 1>&2;
+		signe_transaction="--single-transaction";
+		if [ "xY" = "x$db_lock" ]; then
+			signe_transaction="";
+		fi
+		#echo "@signe_transaction: $signe_transaction";
 
 		function make_mysql_dump {
 			if [ "x" != "x$db_no_data_table" ]; then
 				mysqldump \
 					--defaults-extra-file=$mysql_pass_cnf_file \
 					--default-character-set=$db_default_charset \
-					--single-transaction \
+					$single_transaction \
 					$db_name $db_ingore_table \
 				&& mysqldump \
 					--defaults-extra-file=$mysql_pass_cnf_file \
 					--default-character-set=$db_default_charset \
-					--single-transaction \
+					$single_transaction \
 					$db_name $db_no_data_table;
 				retval=$?
 			else
 				mysqldump \
 					--defaults-extra-file=$mysql_pass_cnf_file \
 					--default-character-set=$db_default_charset \
-					--single-transaction \
+					$single_transaction \
 					$db_name $db_ingore_table;
 				retval=$?
 			fi
